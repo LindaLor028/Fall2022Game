@@ -1,0 +1,30 @@
+testApp () {
+	mockdb = new MockDatabase(...) ;
+	application.initi(mockDB) ← this is injection
+	listOfOpponents = application.getOpponents(“Bob,” 78kg);
+	assertCallOnce(getOpponent, “Bob” 70) ; // assert somewhere in the application code (in class App list<> getOpponents (call) ← in this call, we analyze the input; here we make a database score. (we call the mock database somewhere in the app, in the init there will be a databaseDB
+
+
+
+class App {
+
+    init {
+        mockDatabase
+    }
+
+    function calculate(){
+
+        calculations
+        .
+        .
+        . 
+        return output
+    }
+}
+
+@Test
+function testApp() {
+    mockDB = new MockDatabase(...);
+    returnOutput = app.calculate()
+    assertCallOnce(calculate, expectedOutput)
+}
