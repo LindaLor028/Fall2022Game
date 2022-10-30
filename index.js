@@ -42,7 +42,7 @@ const keys = {
 
 // battle
 const battle = {
-    initated: false
+    initiated: false
 }
 
 // arrays
@@ -56,9 +56,6 @@ var movables = [] // ... spread operator so we don't have a 2d array stuff
 // images
 const backgroundImg = new Image()
 backgroundImg.src = './RPGAssets/TestMap.png'
-
-const battleBackgroundImg = new Image()
-battleBackgroundImg.src = './RPGAssets/Images/battleBackground.png'
 
 const foregroundImg = new Image()
 foregroundImg.src = './RPGAssets/ForegroundTest.png'
@@ -75,7 +72,6 @@ playerRightImg.src = './RPGAssets/Images/playerRight.png'
 const playerLeftImg = new Image()
 playerLeftImg.src = './RPGAssets/Images/playerLeft.png'
 
-
 // Sprites
 const player = new Sprite ({
     position: {
@@ -84,7 +80,8 @@ const player = new Sprite ({
     },
     image: playerDownImg,
     frames:{
-        max:4
+        max: 4,
+        hold: 10
     },
     sprites: {
         up: playerUpImg,
@@ -94,7 +91,6 @@ const player = new Sprite ({
     }
 })
 
-const battleBackground = new Sprite({position: { x: 0,y: 0},image: battleBackgroundImg})
 const foreground = new Sprite({position : {x: offset.x, y: offset.y}, image:foregroundImg})
 const background = new Sprite({position : {x: offset.x, y: offset.y}, image:backgroundImg})
 
@@ -117,7 +113,6 @@ movables = [background, ...boundaries, foreground, ...battleZones]
 
 // Animations
 animate()
-
 
 /**
  * ====================================================================================================
@@ -258,9 +253,9 @@ function animate() {
     foreground.draw()
 
     let moving = true
-    player.moving = false
-    // activate battle
+    player.animate = false
 
+    // activate battle
     if (battle.initiated) return // ensures that player cannot move anymore !
 
     if (keys.w.pressed || keys.a.pressed  || keys.s.pressed || keys.d.pressed) {
@@ -268,16 +263,20 @@ function animate() {
             const battleZone = battleZones[i]
             const overlappingArea = gameCalculator.calculateOverlap({rectangle1:player, rectangle2:battleZone})
 
-            console.log(overlappingArea)
             // detect sides of the player
             if (gameCalculator.rectangularCollision({rectangle1: player, rectangle2: battleZone}) && 
                 overlappingArea > (player.width * player.height) / 2 &&
                 Math.random() < 0.1 // 10 % chance to activate the battle !
             ) 
             {
-                //deactivate current animation loop 
+                // deactivate current animation loop 
                 window.cancelAnimationFrame(animationId)
                 battle.initiated = true
+
+                // adjust audio
+                audio.Map.stop()
+                audio.InitBattle.play()
+                audio.Battle.play()
                 
                 // TODO: If you have a moving sprite, this would stop them from moving as well !
                 animateBattleStart()
@@ -321,6 +320,7 @@ function animateBattleStart() {
                 opacity: 1,
                 duration: 0.4,
                 onComplete() {
+                    initBattle()
                     animateBattle()
                     gsap.to('#overlappingDiv', {
                         opacity: 0,
@@ -330,12 +330,6 @@ function animateBattleStart() {
             })
         } 
     })
-}
-
-function animateBattle() {
-    window.requestAnimationFrame(animateBattle)
-    battleBackground.draw()
-    console.log('animating battle')
 }
 
 function updateMovables(bool, xOffset, yOffset) {
@@ -355,7 +349,7 @@ function updateMovables(bool, xOffset, yOffset) {
  */
 
 function playerKeyDown(bool, image, xChange, yChange ){
-    player.moving = true
+    player.animate = true
     player.image = image
 
     if (collided(xOffset = xChange, yOffset = yChange)) {
@@ -391,46 +385,57 @@ function collided(xOffset,  yOffset) {
  * ==========================================================================================
  */
 
- let lastKey = ''
- // detecting key down
- window.addEventListener('keydown', (e) => {
+let lastKey = ''
+// detecting key down
+window.addEventListener('keydown', (e) => {
      switch (e.key) { 
-         case 'w': //whenever e.key is w
-             keys.w.pressed = true
-             lastKey = 'w'
-             break
-         case 'a': 
-             keys.a.pressed = true
-             lastKey = 'a'
-             break
-         case 's': 
-             keys.s.pressed = true
-             lastKey = 's'
-             break
-         case 'd':
-             keys.d.pressed = true
-             lastKey = 'd'
-             break
-     }
- })
- 
- // detecting key up
- window.addEventListener('keyup', (e) => {
- 
-     switch (e.key) { 
-         case 'w': //whenever e.key is w
-             keys.w.pressed = false
-             break
-         case 'a': 
-             keys.a.pressed = false
-             break
-         case 's': 
-             keys.s.pressed = false
-             break
-         case 'd':
-             keys.d.pressed = false
-             break
-     }
- })
+        case 'w': //whenever e.key is w
+            keys.w.pressed = true
+            lastKey = 'w'
+            break
+        case 'a': 
+            keys.a.pressed = true
+            lastKey = 'a'
+            break
+        case 's': 
+            keys.s.pressed = true
+            lastKey = 's'
+            break
+        case 'd':
+            keys.d.pressed = true
+            lastKey = 'd'
+            break
+    }
+})
 
+// detecting key up
+window.addEventListener('keyup', (e) => {
+    switch (e.key) { 
+        case 'w': //whenever e.key is w
+            keys.w.pressed = false
+            break
+        case 'a': 
+            keys.a.pressed = false
+            break
+        case 's': 
+            keys.s.pressed = false
+            break
+        case 'd':
+            keys.d.pressed = false
+            break
+    }
+})
 
+/**
+ * ==========================================================================================
+ *                                     AUDIO LISTENER
+ * ==========================================================================================
+ */
+
+let clicked = false
+addEventListener('click', () => {
+    if (!clicked) {
+        audio.Map.play()
+        clicked = true
+    }
+})

@@ -1,20 +1,33 @@
 class Sprite {
     // does not matter which order we pass things through
-    constructor({position, image, frames = { max : 1}, sprites }) { //whenever you create a new instance of a sprite, we call this code first!  
+    constructor({position, image, frames = { max : 1, hold: 10 }, sprites, animate = false, rotation = 0}) { //whenever you create a new instance of a sprite, we call this code first!  
         this.position = position 
-        this.image = image
+        this.image = new Image()
         this.frames = {...frames, val: 0, elasped: 0 }
          
         this.image.onload = () => {
             this.width = this.image.width / this.frames.max
             this.height = this.image.height
         }
-        this.moving = false
+
+        this.image.src = image.src
+
+        this.animate = animate
         this.sprites = sprites
+        this.opacity = 1
         
+        // this.rotation = rotation  // by radians
     }
 
     draw() {
+        context.save()
+        
+        // for rotation
+        // context.translate(this.position.x + this.width / 2, this.position.y + this.height / 2)
+        // context.rotation(this.rotation) 
+        // context.translate(-this.position.x + this.width / 2, -this.position.y + this.height / 2) // translating back so canvas renders
+        
+        context.globalAlpha = this.opacity
         context.drawImage(
             this.image, 
             this.frames.val * this.width, // determine crop position 
@@ -26,17 +39,80 @@ class Sprite {
             this.image.width / this.frames.max, 
             this.image.height
         )
+        context.restore()
 
-        if (!this.moving) return // we don't call the following code
+        if (!this.animate) return // we don't call the following code
 
         if (this.frames.max > 1) {
             this.frames.elasped++
         }
-        if (this.frames.elasped % 10 == 0) {
+        if (this.frames.elasped % this.frames.hold == 0) {
             if (this.frames.val < this.frames.max - 1) this.frames.val++
             
             else this.frames.val = 0
         }
+    }    
+}
+
+class Monster extends Sprite {
+    constructor ({position, image, frames = { max : 1, hold: 10 }, sprites, animate = false, rotation = 0, isEnemy = false, name, attacks}){
+        super({position, image, frames, sprites, animate, rotation})
+
+        this.health = 100
+        this.isEnemy = isEnemy
+        this.name = name
+        this.attacks = attacks
+    }
+
+    faint() {
+        document.querySelector('#dialogueBox').innerHTML = this.name + ' fainted!'
+        gsap.to(this.position, {y: this.position.y + 20})
+        gsap.to(this, {opacity: 0})
+    }
+
+    attack({attack, recipient, renderedSprites}) {
+        document.querySelector('#dialogueBox').style.display = 'block'
+        document.querySelector('#dialogueBox').innerHTML = this.name + ' used ' + attack.name
+
+        let healthBar = '#enemyHealthBar'
+        if (this.isEnemy) healthBar = '#playerHealthBar'
+
+        recipient.health -= attack.damage
+
+        switch (attack.name) {
+            case 'Tackle':
+                const timeline = gsap.timeline()
+
+                let movementDistance = 20
+                if (this.isEnemy) movementDistance = -20
+
+                timeline.to(this.position, {
+                    x: this.position.x - movementDistance
+                }).to(this.position, {
+                    x: this.position.x + movementDistance * 2, 
+                    duration: 0.1,
+                    onComplete: () => {
+                        // Enemy actually gets hit
+                        gsap.to(healthBar, {width: recipient.health + '%'})
+                        gsap.to(recipient.position, {
+                            x: recipient.position.x + 10,
+                            yoyo: true,
+                            repeat: 5,
+                            duration: 0.08,
+                        })
+                        gsap.to(recipient, {opacity: 0, repeat: 5, yoyo: true, duration: 0.08})
+                    }
+                }).to(this.position, {
+                    x: this.position.x
+                })
+            break;
+
+            case 'Fireball':
+                // too lazy to complete; not necessary for now
+                gsap.to(healthBar, {width: recipient.health + '%'})
+            break;
+        }
+        
     }
 }
 
