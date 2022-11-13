@@ -139,7 +139,7 @@ animate()
 function drawCollisions() {
     collisionsMaps.forEach((row, i) =>{
         row.forEach((symbol, j) => {
-            if (symbol === 1026) { 
+            if (symbol === 1025) {  // 1025
                 boundaries.push(
                     new Boundary ({ 
                         position : {
@@ -152,7 +152,7 @@ function drawCollisions() {
                 ) 
             }
 
-            if (symbol === 1027) { 
+            if (symbol === 1026) {  // 1026
                 boundaries.push(
                     new Boundary ({ 
                         position : {
@@ -165,7 +165,7 @@ function drawCollisions() {
                 ) 
             }
 
-            if (symbol === 1028) { 
+            if (symbol === 1027) { // 1027
                 boundaries.push(
                     new Boundary ({ 
                         position : {
@@ -178,7 +178,7 @@ function drawCollisions() {
                 ) 
             }
         
-            if (symbol === 1029) {  
+            if (symbol === 1028) {  // 1028
                 boundaries.push(
                     new Boundary ({ 
                         position : {
@@ -191,7 +191,7 @@ function drawCollisions() {
                 ) 
             }
 
-            if (symbol === 1030) {
+            if (symbol === 1029) { // 1029
                 boundaries.push(
                     new Boundary ({ 
                         position : {

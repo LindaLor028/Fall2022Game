@@ -1,4 +1,5 @@
 class Sprite {
+    
     // does not matter which order we pass things through
     constructor({position, image, frames = { max : 1, hold: 10 }, sprites, animate = false, rotation = 0}) { //whenever you create a new instance of a sprite, we call this code first!  
         this.position = position 
