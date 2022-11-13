@@ -13,10 +13,15 @@ let queue
 
 function initBattle() {
     document.querySelector('#userInterface').style.display = 'block'
+    document.querySelector('#enemyBar').style.display = 'block'
+    document.querySelector('#playerBar').style.display = 'block'
+    document.querySelector('#bottomBar').style.display = 'flex'
+    document.querySelector('#attackBox').style.display = 'grid'
+    document.querySelector('#attackTypeBox').style.display = 'flex'
     document.querySelector('#dialogueBox').style.display = 'none'
     document.querySelector('#enemyHealthBar').style.width = '100%'
     document.querySelector('#playerHealthBar').style.width = '100%'
-    document.querySelector('#attacksBox').replaceChildren()
+    document.querySelector('#attackBox').replaceChildren()
 
     draggle = new Monster(monsters.Draggle)
     emby = new Monster(monsters.Emby)
@@ -25,7 +30,7 @@ function initBattle() {
     emby.attacks.forEach(attack => {
         const button = document.createElement('button')
         button.innerHTML = attack.name
-        document.querySelector('#attacksBox').append(button)
+        document.querySelector('#attackBox').append(button)
     })
 
     queue = [] // attacks
@@ -47,6 +52,7 @@ function initBattle() {
                             document.querySelector('#userInterface').style.display = 'none'
                             gsap.to('#overlappingDiv', {opacity: 0})
                             battle.initiated = false
+                            audio.Map.play()
                         }
                     })
                 })
@@ -69,6 +75,7 @@ function initBattle() {
                             document.querySelector('#userInterface').style.display = 'none'
                             gsap.to('#overlappingDiv', {opacity: 0})
                             battle.initiated = false
+                            audio.Map.play()
                         }
                     })
                 })

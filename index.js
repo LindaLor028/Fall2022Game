@@ -37,8 +37,13 @@ const keys = {
     },
     d: {
         pressed: false 
+    },
+    f: {
+        pressed: false 
     }
 }
+
+let dialogueShow = false
 
 // battle
 const battle = {
@@ -275,6 +280,7 @@ function animate() {
 
                 // adjust audio
                 audio.Map.stop()
+                mapMusicPlaying = false
                 audio.InitBattle.play()
                 audio.Battle.play()
                 
@@ -287,6 +293,18 @@ function animate() {
 
     // animate Player sprite based on key detection
     animatePlayer(bool = moving)
+
+    // dialogue box
+    if (keys.f.pressed){
+        console.log('f pressed method')
+        document.querySelector('#userInterface').style.display = 'block'
+        document.querySelector('#dialogueBox').style.display = 'block'
+        document.querySelector('#dialogueBox').innerHTML = 'hello nice to meet you'
+    }
+
+    document.querySelector('#dialogueBox').addEventListener('click', (e) => {
+        e.currentTarget.style.display = 'none'
+    })
     
 }
 
@@ -405,6 +423,10 @@ window.addEventListener('keydown', (e) => {
             keys.d.pressed = true
             lastKey = 'd'
             break
+        case 'f':
+            keys.f.pressed = true
+            dialogueShow = true
+            break
     }
 })
 
@@ -422,6 +444,9 @@ window.addEventListener('keyup', (e) => {
             break
         case 'd':
             keys.d.pressed = false
+            break
+        case 'f':
+            keys.f.pressed = false
             break
     }
 })

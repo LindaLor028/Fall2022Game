@@ -68,6 +68,9 @@ class Monster extends Sprite {
         document.querySelector('#dialogueBox').innerHTML = this.name + ' fainted!'
         gsap.to(this.position, {y: this.position.y + 20})
         gsap.to(this, {opacity: 0})
+        audio.Battle.stop()
+        audio.Victory.play()
+
     }
 
     attack({attack, recipient, renderedSprites}) {
@@ -93,6 +96,7 @@ class Monster extends Sprite {
                     duration: 0.1,
                     onComplete: () => {
                         // Enemy actually gets hit
+                        audio.TackleHit.play()
                         gsap.to(healthBar, {width: recipient.health + '%'})
                         gsap.to(recipient.position, {
                             x: recipient.position.x + 10,
