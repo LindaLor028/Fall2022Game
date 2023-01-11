@@ -40,7 +40,14 @@ const keys = {
     },
     f: {
         pressed: false 
+    },
+    j: {
+        pressed : false
+    },
+    k: {
+        pressed : false
     }
+    
 }
 
 let dialogueShow = false
@@ -77,6 +84,9 @@ playerRightImg.src = './RPGAssets/Images/playerRight.png'
 const playerLeftImg = new Image()
 playerLeftImg.src = './RPGAssets/Images/playerLeft.png'
 
+const strollerImg = new Image()
+strollerImg.src = './RPGAssets/Images/stroller.png'
+
 // Sprites
 const player = new Sprite ({
     position: {
@@ -96,6 +106,8 @@ const player = new Sprite ({
     }
 })
 
+const stroller = new Sprite({position : {x:canvas.width/2 - 192/4, y:canvas.height/2 + 50}, image:strollerImg})
+
 const foreground = new Sprite({position : {x: offset.x, y: offset.y}, image:foregroundImg})
 const background = new Sprite({position : {x: offset.x, y: offset.y}, image:backgroundImg})
 
@@ -114,7 +126,7 @@ generateCollisions()
 drawBattleZones()
 drawCollisions() 
 
-movables = [background, ...boundaries, foreground, ...battleZones]
+movables = [background, ...boundaries, foreground, ...battleZones, stroller]
 
 // Animations
 animate()
@@ -256,12 +268,19 @@ function animate() {
     drawBackground()
     player.draw()
     foreground.draw()
+    stroller.draw()
 
     let moving = true
     player.animate = false
 
     // activate battle
     if (battle.initiated) return // ensures that player cannot move anymore !
+
+
+    //TODO: fjdsajfiow
+    if (keys.j.pressed) { 
+        animateStroller()
+    }
 
     if (keys.w.pressed || keys.a.pressed  || keys.s.pressed || keys.d.pressed) {
         for (let i = 0; i < battleZones.length; i++){
@@ -310,20 +329,32 @@ function animate() {
 
 function animatePlayer(bool) {
     if (keys.w.pressed && lastKey == 'w'){
-        playerKeyDown(bool = bool, image = player.sprites.up,
-            xChange = 0, yChange = +3 )
+        player.offset = {
+            x: 0,
+            y: +3
+        }
+        playerKeyDown(bool = bool, image = player.sprites.up)
     }
     else if (keys.a.pressed && lastKey == 'a') {
-        playerKeyDown(bool = bool, image = player.sprites.left,
-            xChange = 3, yChange = 0 )
+        player.offset = {
+            x: +3,
+            y: 0
+        }
+        playerKeyDown(bool = bool, image = player.sprites.left)
     }
     else if (keys.s.pressed && lastKey == 's') {
-        playerKeyDown(bool = bool, image = player.sprites.down,
-            xChange = 0, yChange = -3 )
+        player.offset = {
+            x: 0,
+            y: -3
+        }
+        playerKeyDown(bool = bool, image = player.sprites.down)
     }
     else if (keys.d.pressed && lastKey == 'd') {
-        playerKeyDown(bool = bool, image = player.sprites.right,
-            xChange = -3, yChange = 0 )
+        player.offset = {
+            x: -3,
+            y: 0
+        }
+        playerKeyDown(bool = bool, image = player.sprites.right)
     }
 }
 
@@ -350,11 +381,11 @@ function animateBattleStart() {
     })
 }
 
-function updateMovables(bool, xOffset, yOffset) {
+function updateMovables(bool) {
     if (bool) {
         movables.forEach((movable) => {
-            movable.position.x += xOffset
-            movable.position.y += yOffset
+            movable.position.x += player.offset.x
+            movable.position.y += player.offset.y
         })
     }
 }
@@ -366,17 +397,32 @@ function updateMovables(bool, xOffset, yOffset) {
  * ====================================================================================================
  */
 
-function playerKeyDown(bool, image, xChange, yChange ){
+function playerKeyDown(bool, image ){
     player.animate = true
+
     player.image = image
 
-    if (collided(xOffset = xChange, yOffset = yChange)) {
+    if (collided() || collidedWithStroller()) {
         bool = false
     }
-    updateMovables(bool = bool, xOffset = xChange, yOffset = yChange)
+ 
+    // //When j is held down, player is able to move the stroller 
+    if (keys.j.pressed && collidedWithStroller() &&
+        !strollerCollision()) {
+        console.log("j is being held on")
+
+        // update stroller position
+        stroller.position = {
+            x: stroller.position.x -= player.offset.x * 0.8, // TODO: Fix this hard-coded offsets
+            y: stroller.position.y -= player.offset.y * 0.8
+        }
+    }
+ 
+    updateMovables(bool = bool)
 }
 
-function collided(xOffset,  yOffset) {
+
+function collided() {
     for (let i = 0; i < boundaries.length; i++){
         const boundary = boundaries[i]
         // detect sides of the player 
@@ -385,8 +431,8 @@ function collided(xOffset,  yOffset) {
             rectangle2: {
                 ...boundary, 
                 position:{
-                    x: boundary.position.x + xOffset,
-                    y: boundary.position.y + yOffset
+                    x: boundary.position.x + player.offset.x,
+                    y: boundary.position.y + player.offset.y
                 }
             }
         })
@@ -396,6 +442,114 @@ function collided(xOffset,  yOffset) {
     }
 }
 
+/**
+ * Checks if stroller collides with player ! 
+ * @returns 
+ */
+function collidedWithStroller() { 
+    if (gameCalculator.rectangularCollision({
+        rectangle1: player,
+        rectangle2: {  
+            ...stroller, 
+            position: {
+                x: stroller.position.x + player.offset.x,
+                y: stroller.position.y + player.offset.y
+            }
+        }
+        }))
+    {
+        console.log("Player collided w/ the stroller")
+        return true
+    }
+}
+
+function strollerCollision(){ 
+    for (let i = 0; i < boundaries.length; i++){
+        const boundary = boundaries[i]
+        // detect sides of the player 
+        if (gameCalculator.rectangularCollision({
+            rectangle1: stroller,
+            rectangle2: {
+                ...boundary, 
+                position:{
+                    x: boundary.position.x + player.offset.x,
+                    y: boundary.position.y + player.offset.y
+                }
+            }
+        })
+        ) {
+            return true
+        }
+    }
+}
+
+/**
+ * ==========================================================================================
+ *                                STROLLER MOVING LISTENERS 
+ * ==========================================================================================
+ */
+
+function animateStroller() { 
+    if (keys.w.pressed){ 
+        strollerTop()
+    }
+
+    else if (keys.s.pressed) {
+        strollerBottom()
+    }
+
+    else if (keys.d.pressed) {
+        strollerRight()
+    }
+
+    else if (keys.a.pressed) {
+        strollerLeft()
+    }
+}
+
+function strollerTop() { 
+    if (collidedWithStroller()) {
+        if (!gameCalculator.calculateTop({user: player, item: stroller})) {
+            stroller.position = {
+                x: player.position.x,
+                y: player.position.y - stroller.height
+            }
+        }
+    }
+}
+
+function strollerBottom() {
+    if (collidedWithStroller()) {
+        if (gameCalculator.calculateTop({user: player, item: stroller})) {
+            stroller.position = {
+                x: player.position.x,
+                y: player.position.y + player.height
+            }
+        }
+    }
+}
+
+function strollerRight() {
+    if (collidedWithStroller()) {
+        if (!gameCalculator.calculateRight({user: player, item: stroller})) { 
+            stroller.position = {
+                x: player.position.x + player.width,
+                y: player.position.y
+            }
+        }
+    }
+}
+
+function strollerLeft() {
+    if (collidedWithStroller()) {
+        if (gameCalculator.calculateRight({user: player, item: stroller})) {
+            stroller.position = {
+                x: player.position.x - player.width,
+                y: player.position.y
+            } 
+        }
+    }
+}
 
 /**
  * ==========================================================================================
@@ -427,6 +581,14 @@ window.addEventListener('keydown', (e) => {
             keys.f.pressed = true
             dialogueShow = true
             break
+        case 'j':
+            keys.j.pressed = true
+            keys.k.pressed = false
+            break
+        case 'k':
+            keys.k.pressed = true
+            keys.j.pressed = false
+            break
     }
 })
 
@@ -447,6 +609,12 @@ window.addEventListener('keyup', (e) => {
             break
         case 'f':
             keys.f.pressed = false
+            break
+        case 'j':
+            keys.j.pressed = false
+            break
+        case 'k':
+            keys.k.pressed = false
             break
     }
 })

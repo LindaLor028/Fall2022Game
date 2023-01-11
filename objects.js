@@ -40,5 +40,25 @@ class GameCalculator {
             rectangle1.position.y + rectangle1.height >= rectangle2.position.y 
         )
     }
+
+
+    // Stroller Calculations 
+
+    /**
+     * Returns True if stroller is located at TOP of player 
+     */
+    calculateTop({user, item}) {
+        //&& item.position.x >= user.position.x
+        //user.position.y + item.height
+        return (item.position.y < user.position.y)
+    }
+
+    /**
+     * Returns True if stroller is located at RIGHT of player 
+     */
+    calculateRight({user, item}) {
+        return (item.position.x > user.position.x)
+    }
+    
 }
 
