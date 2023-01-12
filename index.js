@@ -38,9 +38,6 @@ const keys = {
     d: {
         pressed: false 
     },
-    f: {
-        pressed: false 
-    },
     j: {
         pressed : false
     },
@@ -87,6 +84,9 @@ playerLeftImg.src = './RPGAssets/Images/playerLeft.png'
 const strollerImg = new Image()
 strollerImg.src = './RPGAssets/Images/stroller.png'
 
+const npcImg = new Image()
+npcImg.src = './RPGAssets/Images/playerUp.png'
+
 // Sprites
 const player = new Sprite ({
     position: {
@@ -111,6 +111,18 @@ const stroller = new Sprite({position : {x:canvas.width/2 - 192/4, y:canvas.heig
 const foreground = new Sprite({position : {x: offset.x, y: offset.y}, image:foregroundImg})
 const background = new Sprite({position : {x: offset.x, y: offset.y}, image:backgroundImg})
 
+const npc = new Sprite ({
+    position: {
+        x: canvas.width/2 + 200,
+        y: canvas.height/2 - 100
+    },
+    image: playerDownImg,
+    frames:{
+        max: 4,
+        hold: 10
+    }
+})
+
 
 /**
  * ====================================================================================================
@@ -126,7 +138,7 @@ generateCollisions()
 drawBattleZones()
 drawCollisions() 
 
-movables = [background, ...boundaries, foreground, ...battleZones, stroller]
+movables = [background, ...boundaries, foreground, ...battleZones, stroller, npc]
 
 // Animations
 animate()
@@ -266,6 +278,7 @@ function animate() {
     
     // draw background, boundaries, zones, player, and foreground
     drawBackground()
+    npc.draw()
     player.draw()
     foreground.draw()
     stroller.draw()
@@ -315,8 +328,17 @@ function animate() {
     animatePlayer(bool = moving)
 
     // dialogue box
-    if (keys.f.pressed){
-        console.log('f pressed method')
+    if (keys.k.pressed) {
+        console.log('k pressed method')
+        npcInteraction()
+    }
+
+}
+
+function npcInteraction() {
+    console.log(collidedWithNpc())
+
+    if (collidedWithNpc()){
         document.querySelector('#userInterface').style.display = 'block'
         document.querySelector('#dialogueBox').style.display = 'block'
         document.querySelector('#dialogueBox').innerHTML = 'hello nice to meet you'
@@ -324,8 +346,8 @@ function animate() {
 
     document.querySelector('#dialogueBox').addEventListener('click', (e) => {
         e.currentTarget.style.display = 'none'
+        dialogueShow = false
     })
-    
 }
 
 function animatePlayer(bool) {
@@ -403,7 +425,7 @@ function playerKeyDown(bool, image ){
 
     player.image = image
 
-    if (collided() || collidedWithStroller()) {
+    if (collided() || collidedWithStroller() || collidedWithNpc()) {
         bool = false
     }
  
@@ -481,6 +503,22 @@ function strollerCollision(){
         ) {
             return true
         }
+    }
+}
+
+function collidedWithNpc() {
+    if (gameCalculator.rectangularCollision({
+        rectangle1: player,
+        rectangle2: {
+            ...npc, 
+            position:{
+                x: npc.position.x + player.offset.x,
+                y: npc.position.y + player.offset.y
+            }
+        }
+    })) 
+    {
+        return true
     }
 }
 
@@ -578,10 +616,6 @@ window.addEventListener('keydown', (e) => {
             keys.d.pressed = true
             lastKey = 'd'
             break
-        case 'f':
-            keys.f.pressed = true
-            dialogueShow = true
-            break
         case 'j':
             keys.j.pressed = true
             keys.k.pressed = false
@@ -607,9 +641,6 @@ window.addEventListener('keyup', (e) => {
             break
         case 'd':
             keys.d.pressed = false
-            break
-        case 'f':
-            keys.f.pressed = false
             break
         case 'j':
             keys.j.pressed = false
