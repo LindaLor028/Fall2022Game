@@ -310,6 +310,7 @@ function animate() {
         }
     }
 
+    
     // animate Player sprite based on key detection
     animatePlayer(bool = moving)
 
