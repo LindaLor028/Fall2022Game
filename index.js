@@ -53,12 +53,17 @@ let dialogueShow = false
 const battle = {
     initiated: false
 }
+const doorHit = {
+    initiated: false
+}
 
 // arrays
 const collisionsMaps = []
 const boundaries = []
 const battleZonesMap = []
 const battleZones = []
+const doorCollisionsMap = []
+const doorCollisions = []
 
 var movables = [] // ... spread operator so we don't have a 2d array stuff
 
@@ -134,11 +139,13 @@ const npc = new Sprite ({
 
 generateBattleZones()
 generateCollisions()
+generateDoorCollisions()
 
 drawBattleZones()
 drawCollisions() 
+drawDoorCollisions()
 
-movables = [background, ...boundaries, foreground, ...battleZones, stroller, npc]
+movables = [background, ...boundaries, foreground, ...battleZones, stroller, npc, ...doorCollisions]
 
 // Animations
 animate()
@@ -266,6 +273,32 @@ function drawBackground() {
     battleZones.forEach(battleZone => {
         battleZone.draw()
     })
+    doorCollisions.forEach(doorCollision => {
+        doorCollision.draw()
+    })
+}
+function generateDoorCollisions(){
+    for (let i = 0; i < doorCollisionsData.length; i +=70) { // in increments of 70 (width of map!)
+        doorCollisionsMap.push(doorCollisionsData.slice(i, 70 + i)) //i by default is = to 0 
+    }
+}
+function drawDoorCollisions(){
+    doorCollisionsMap.forEach((row, i) =>{
+        row.forEach((symbol, j) => {
+            if (symbol === 1026) { 
+                doorCollisions.push(
+                    new Boundary ({ 
+                        position : {
+                            x: j * Boundary.fullWidth + offset.x, 
+                            y: i * Boundary.fullHeight + offset.y
+                        },
+                        width : Boundary.fullWidth,
+                        height: Boundary.fullHeight
+                    })
+                ) 
+            }
+        })
+    })
 }
 
 /**
@@ -273,6 +306,8 @@ function drawBackground() {
  *                                       ANIMATION METHODS 
  * ====================================================================================================
  */
+
+
 function animate() { 
     const animationId = window.requestAnimationFrame(animate) //call itself, being an infinite loop ! 
     
@@ -280,8 +315,9 @@ function animate() {
     drawBackground()
     npc.draw()
     player.draw()
-    foreground.draw()
     stroller.draw()
+    foreground.draw()
+    
 
     let moving = true
     player.animate = false
@@ -322,10 +358,15 @@ function animate() {
             }
         }
     }
-
     
     // animate Player sprite based on key detection
     animatePlayer(bool = moving)
+
+    if (doorHit.initiated) return   
+
+    if (keys.w.pressed || keys.a.pressed  || keys.s.pressed || keys.d.pressed) {
+        doorInteraction()
+    }
 
     // dialogue box
     if (keys.k.pressed) {
@@ -333,6 +374,20 @@ function animate() {
         npcInteraction()
     }
 
+}
+
+function doorInteraction() {
+    if (collidedWithDoor()) {
+        console.log('Activate DC')
+        window.cancelAnimationFrame(houseAnimationId)
+        doorHit.initiated = true 
+
+        audio.Map.stop()
+        mapMusicPlaying = false
+
+        doorHitActivate()
+        // break
+    }
 }
 
 function npcInteraction() {
@@ -413,6 +468,29 @@ function updateMovables(bool) {
     }
 }
 
+function doorHitActivate() {
+    gsap.to('#overlappingDiv', {
+        opacity: 1, 
+        repeat: 3,
+        yoyo: true,
+        duration: 0.4,
+        onComplete() {
+            gsap.to('#overlappingDiv', {
+                opacity: 1,
+                duration: 0.4,
+                onComplete() {
+                    animateInterior()
+                    cancelIntScene()
+                    gsap.to('#overlappingDiv', {
+                        opacity: 0,
+                        duration: 0.4
+                    })
+                }
+            })
+        } 
+    })
+}
+
 /**
  * ====================================================================================================
  *                                           GAME LOGIC METHODS 
@@ -425,7 +503,7 @@ function playerKeyDown(bool, image ){
 
     player.image = image
 
-    if (collided() || collidedWithStroller() || collidedWithNpc()) {
+    if (collided() || collidedWithStroller() || collidedWithNpc() || collidedWithDoor()) {
         bool = false
     }
  
@@ -519,6 +597,26 @@ function collidedWithNpc() {
     })) 
     {
         return true
+    }
+}
+
+function collidedWithDoor() {
+    for (let i = 0; i < doorCollisions.length; i++){
+        const doorCollision = doorCollisions[i]
+
+        if (gameCalculator.rectangularCollision({
+            rectangle1: player, 
+            rectangle2: {  
+                ...doorCollision, 
+                position: {
+                    x: doorCollision.position.x + player.offset.x,
+                    y: doorCollision.position.y + player.offset.y
+                }
+            }})   
+        )
+        {
+            return true
+        }
     }
 }
 
